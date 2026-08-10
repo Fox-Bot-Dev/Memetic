@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="system">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memetic | TTRPG Codex Engine</title>
+  <meta name="description" content="Memetic - Self-binding TTRPG character engine and dynamic state manipulator.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- PDF Parsing Engine (Cloudflare CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Hidden Native File Inputs -->
+  <input type="file" id="portraitInput" accept="image/*" style="display:none;" />
+  <input type="file" id="bgInput" accept="image/*" style="display:none;" />
+  <input type="file" id="bucketFileInput" accept=".json" style="display:none;" />
+  <input type="file" id="pdfFileInput" accept=".pdf" style="display:none;" />
+
+  <div id="appFrame">
+
+    <!-- PINNED HEADER -->
+    <header role="banner">
+      <div class="portrait-badge">
+        <div class="avatar-circle" id="avatarCircle" role="button" tabindex="0" aria-label="Upload Character Portrait" title="Click to Upload Portrait">
+          <span id="avatarFallback">TS</span>
+          <img id="avatarImage" src="" alt="Character Portrait" style="display:none;" />
+        </div>
+        <div>
+          <strong style="font-size: 1rem;" id="charName">Thorne of the Silver Blood</strong> 
+          <br><small style="color: var(--text-muted);" id="charClass">Level 5 Blood Knight</small>
+        </div>
+      </div>
+
+      <!-- BADGES COMPANION GROUP -->
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        
+        <!-- 1. MAIN COMBAT BADGE -->
+        <div class="combat-header-badge" role="region" aria-label="Combat Statistics Summary">
+          <div class="combat-stat-unit">
+            <strong id="displayAC">17</strong>
+            <span>AC</span>
+          </div>
+          <div style="border-left:1px solid var(--border-color); height:20px;"></div>
+          
+          <div class="combat-stat-unit">
+            <div style="display:flex; align-items:center; gap:0.2rem;">
+              <strong id="displayHP">38 / 42</strong>
+              <button class="hp-adjust-btn" onclick="promptAdjustHP()" aria-label="Adjust Hit Points, Temporary HP, or Necrotic Drain" title="Adjust HP / Temp / Necrotic">+</button>
+            </div>
+            <span>HP</span>
+          </div>
+
+          <div style="border-left:1px solid var(--border-color); height:20px;"></div>
+          <div class="combat-stat-unit">
+            <strong id="displaySpeed">30ft</strong>
+            <span>Speed</span>
+          </div>
+          <div style="border-left:1px solid var(--border-color); height:20px;"></div>
+          <div class="combat-stat-unit">
+            <strong id="displayInit">+1</strong>
+            <span>Init</span>
+          </div>
+        </div>
+
+        <!-- 2. SATELLITE COMPANION ISLAND -->
+        <div class="combat-header-badge status-satellite-badge" id="displayHPSatellite" style="display:none;">
+          <span id="displayTempHPTag" class="temphp-badge-tag" style="display:none;"></span>
+          <span id="displayNecroticTag" class="necrotic-badge-tag" style="display:none;"></span>
+        </div>
+
+      </div>
+
+      <div style="display:flex; gap:0.8rem; align-items:center;">
+        
+        <!-- [GHOSTED] LLM INTEGRATION MODULE -->
+        <div style="position:relative; display:none;" id="secretGeminiModule">
+          <button class="secondary-btn" onclick="toggleGeminiDrawer()" aria-label="Open Gemini AI Assistant">✨ Gemini</button>
+          <div id="geminiDrawer" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background-color:var(--bg-secondary, #181623); color:var(--text-main, #f0f0f0); border:1px solid var(--border-color, #333); padding:0.6rem; border-radius:6px; box-shadow:0 8px 20px rgba(0,0,0,0.6); z-index:1000; width:max-content;">
+            <input type="password" id="apiKeyInput" placeholder="Gemini API Key" style="width: 140px; font-size:0.75rem; padding:0.4rem; border-radius:4px; border:1px solid var(--border-color); background:rgba(0,0,0,0.3); color:var(--text-main); outline:none;" />
+          </div>
+        </div>
+
+        <!-- Cog Menu Wrapper -->
+        <div style="position:relative;">
+          <button class="secondary-btn" onclick="toggleCogMenu()" aria-label="Open Settings and Display Menu">⚙️</button>
+          <div id="cogMenu" role="dialog" aria-label="Settings Menu" style="display:none; position:absolute; right:0; top:calc(100% + 8px); background-color:var(--bg-secondary, #181623); color:var(--text-main, #f0f0f0); border:1px solid var(--border-color, #3a384d); padding:1rem; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.7); z-index:1000; width: 240px; flex-direction: column; gap: 0.8rem;">
+            
+            <label style="font-size:0.75rem; color:var(--text-muted); display:flex; flex-direction:column; gap:0.4rem;">
+              Theme Palette:
+              <select id="themeSelect" aria-label="Select Color Theme Palette" style="padding:0.45rem; border-radius:4px; background-color:var(--bg-primary, #111019); color:var(--text-main, #f0f0f0); border:1px solid var(--border-color); outline:none; cursor:pointer; font-size:0.75rem;">
+                <option value="system">🖥️ System Default</option>
+                <optgroup label="Night Shields">
+                  <option value="astigmatism-amber">Night Amber</option>
+                  <option value="high-fantasy-dark">Dark Slate</option>
+                  <option value="parchment-light">Parchment</option>
+                </optgroup>
+                <optgroup label="Accessibility Modes">
+                  <option value="cb-deuteranopia">High-Contrast Blue/Yellow</option>
+                  <option value="cb-monochrome">Monochrome Slate</option>
+                </optgroup>
+                <optgroup label="Core Classes">
+                  <option value="barbarian">Barbarian (Crimson)</option>
+                  <option value="bard">Bard (Violet)</option>
+                  <option value="cleric">Cleric (Gold)</option>
+                  <option value="druid">Druid (Moss)</option>
+                  <option value="fighter">Fighter (Steel)</option>
+                  <option value="monk">Monk (Ember)</option>
+                  <option value="paladin">Paladin (Sunlight)</option>
+                  <option value="ranger">Ranger (Forest)</option>
+                  <option value="rogue">Rogue (Shadow)</option>
+                  <option value="sorcerer">Sorcerer (Wild Magic)</option>
+                  <option value="warlock">Warlock (Void)</option>
+                  <option value="wizard">Wizard (Arcane)</option>
+                </optgroup>
+              </select>
+            </label>
+
+            <!-- Font Scale -->
+            <label style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>Font Scale (<strong id="fontSizeDisplay" style="color:var(--accent-color);">15px</strong>):</span>
+              <input type="range" id="fontSizeSlider" min="12" max="24" step="1" value="15" aria-label="Adjust UI Font Size Scale" style="width:90px; cursor:pointer;" />
+            </label>
+
+            <!-- Font Family Select -->
+            <label style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>Font Family:</span>
+              <select id="fontFamilySelect" aria-label="Select Font Legibility Style" style="padding:0.25rem; font-size:0.75rem; border-radius:4px; background:var(--bg-primary); color:var(--text-main); border:1px solid var(--border-color);">
+                <option value="system">Default (Roboto)</option>
+                <option value="hyperlegible">Hyperlegible Sans</option>
+                <option value="dyslexic">OpenDyslexic</option>
+                <option value="mono">High-Contrast Mono</option>
+              </select>
+            </label>
+
+            <!-- Reduced Motion Toggle -->
+            <label style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>Disable Animations:</span>
+              <input type="checkbox" id="reducedMotionToggle" aria-label="Disable UI Animations" style="width:auto; cursor:pointer;" />
+            </label>
+
+            <label style="font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              Chassis Opacity:
+              <input type="range" id="opacitySlider" min="0.3" max="1.0" step="0.05" value="0.92" aria-label="Adjust Background Chassis Opacity" style="width:90px; cursor:pointer;" />
+            </label>
+            
+            <button class="secondary-btn" style="font-size:0.75rem; padding:0.4rem; width:100%; text-align:center;" id="uploadBgBtn" aria-label="Upload Custom Sheet Wallpaper">🖼️ Upload Wallpaper</button>
+          </div>
+        </div>
+
+        <span class="memetic-tag" tabindex="0" aria-label="Memetic Codex Engine Active" data-tooltip="[muh-MET-ik] adj. — Relating to ideas or information spread across minds; a thought-form capable of altering perception or reality upon invocation.">MEMETIC</span>
+      </div>
+    </header>
+
+    <!-- 3-COLUMN WORKSPACE GRID -->
+    <div class="workspace-grid">
+
+      <!-- COLUMN 1: SLIDING NUBBINS -->
+      <nav class="nubbin-dock" id="nubbinDock" role="tablist" aria-label="Character Sheet Sections" ondragover="handleNubbinDragOver(event)">
+        <!-- ANCHORED TOP TAB -->
+        <button class="tab-nubbin active" id="nub-character" role="tab" aria-selected="true" aria-controls="view-character" onclick="switchView('view-character')">SHEET</button>
+
+        <!-- REARRANGEABLE PLAYER TABS -->
+        <button class="tab-nubbin draggable-tab" id="nub-details" role="tab" aria-selected="false" aria-controls="view-details" draggable="true" ondragstart="handleNubbinDragStart(event)" ondrop="handleNubbinDrop(event)" onclick="switchView('view-details')">DETAILS</button>
+        <button class="tab-nubbin draggable-tab" id="nub-spells" role="tab" aria-selected="false" aria-controls="view-spells" draggable="true" ondragstart="handleNubbinDragStart(event)" ondrop="handleNubbinDrop(event)" style="display:none;" onclick="switchView('view-spells')">SPELLBOOK</button>
+        <button class="tab-nubbin draggable-tab" id="nub-equipment" role="tab" aria-selected="false" aria-controls="view-equipment" draggable="true" ondragstart="handleNubbinDragStart(event)" ondrop="handleNubbinDrop(event)" onclick="switchView('view-equipment')">EQUIPMENT</button>
+        <button class="tab-nubbin draggable-tab" id="nub-features" role="tab" aria-selected="false" aria-controls="view-features" draggable="true" ondragstart="handleNubbinDragStart(event)" ondrop="handleNubbinDrop(event)" onclick="switchView('view-features')">FEATURES</button>
+        <button class="tab-nubbin draggable-tab" id="nub-journal" role="tab" aria-selected="false" aria-controls="view-journal" draggable="true" ondragstart="handleNubbinDragStart(event)" ondrop="handleNubbinDrop(event)" onclick="switchView('view-journal')">JOURNAL</button>
+
+        <!-- ANCHORED BOTTOM SECTION -->
+        <div class="nubbin-dock-divider" id="dockDivider" role="separator"></div>
+        <button class="tab-nubbin gm-locked" id="nub-gm" role="tab" aria-selected="false" aria-controls="view-gm" onclick="switchView('view-gm')">GM HUB</button>
+        <button class="tab-nubbin gm-locked" id="nub-rules" role="tab" aria-selected="false" aria-controls="view-rules" onclick="switchView('view-rules')">RULES</button>
+        <button class="tab-nubbin" id="nub-buckets" role="tab" aria-selected="false" aria-controls="view-buckets" onclick="switchView('view-buckets')">NOMICON</button>
+      </nav>
+      
+      <!-- COLUMN 2: MAIN CANVAS -->
+      <main class="main-canvas" role="main">
+        
+        <div id="view-character" class="view-panel active" role="tabpanel">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+              <h3>Ability Scores</h3>
+              <button style="font-size:0.65rem; padding:0.15rem 0.35rem;" onclick="toggleStatDisplayFormat()">⇆ Swap View</button>
+            </div>
+            <div class="horizontal-row" id="abilityScoresRow"></div>
+          </div>
+
+          <div class="card">
+            <h3>Saving Throws</h3>
+            <div class="horizontal-row" id="savingThrowsRow"></div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Active Buffs & Debuffs</h3>
+              <button style="font-size:0.65rem; padding:0.15rem 0.35rem;" onclick="promptAddBuff()">+ Add Effect</button>
+            </div>
+            <div id="buffsContainer" style="display:flex; flex-direction:column; gap:0.3rem; margin-top:0.3rem;"></div>
+          </div>
+
+          <div class="card">
+            <h3>Resource Pools</h3>
+            <div id="dynamicResourceZone">
+              <p style="font-size:0.75rem; color: var(--text-muted);">No active injected pools. Select 'RULES & INJECT (GM)' to parse content!</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+              <h3>Attacks & Action Economy</h3>
+              <div style="display:flex; gap:0.4rem; align-items:center;">
+                <span id="combatStatusBadge" style="font-size:0.7rem; color:var(--text-muted);">Mode: <strong>Exploration</strong></span>
+                <button id="resetTurnBtn" style="font-size:0.65rem; padding:0.15rem 0.4rem; display:none;" onclick="resetTurnResources()">🔄 Reset Turn</button>
+              </div>
+            </div>
+
+            <div class="action-filter-bar">
+              <button class="action-filter-btn active" id="act-all" onclick="filterActions('all')">All</button>
+              <button class="action-filter-btn" id="act-attack" onclick="filterActions('attack')">Attacks</button>
+              <button class="action-filter-btn" id="act-action" onclick="filterActions('action')">Actions</button>
+              <button class="action-filter-btn" id="act-bonus" onclick="filterActions('bonus_action')">Bonus Actions</button>
+              <button class="action-filter-btn" id="act-reaction" onclick="filterActions('reaction')">Reactions</button>
+              <button class="action-filter-btn" id="act-misc" onclick="filterActions('misc')">Misc</button>
+            </div>
+
+            <div id="dynamicActionZone"></div>
+          </div>
+        </div>
+
+        <div id="view-details" class="view-panel" role="tabpanel" aria-hidden="true">
+          <div class="card">
+            <h3>Character Background & Details</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top:0.5rem;">
+              <div>
+                <label style="font-size:0.75rem; color:var(--text-muted);">Alignment:</label>
+                <input type="text" value="Lawful Neutral" style="width:100%; margin-top:0.2rem;" />
+              </div>
+              <div>
+                <label style="font-size:0.75rem; color:var(--text-muted);">Deity / Faith:</label>
+                <input type="text" value="The Silver Sovereign" style="width:100%; margin-top:0.2rem;" />
+              </div>
+            </div>
+            <div style="margin-top:1rem;">
+              <label style="font-size:0.75rem; color:var(--text-muted);">Personality Traits & Backstory:</label>
+              <textarea style="width:100%; height:160px; margin-top:0.2rem;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- MULTI-CASTER SPELLBOOK UI -->
+        <div id="view-spells" class="view-panel" role="tabpanel" aria-hidden="true">
+          <div class="spellbook-container">
+            
+            <!-- Top Folder Tabs -->
+            <div class="spell-top-dock" id="spellClassTabs"></div>
+            
+            <!-- Body Wrapper (Chassis + Right Dock) -->
+            <div class="spellbook-body-wrapper">
+              
+              <!-- Mother Box Chassis -->
+              <div class="spellbook-chassis">
+                
+                <div id="spellStatsHeader" style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.4rem;"></div>
+
+                <!-- COLLAPSIBLE SEARCH DRAWER & SLIVER NUB -->
+                <div class="spell-search-container">
+                  <div class="spell-search-drawer" id="spellSearchDrawer">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:0.6rem; width:100%;">
+                      <input type="text" id="spellSearchInput" placeholder="🔍 Search spells by name, school, or keyword (e.g., 'teleport', 'fire', 'radius')..." 
+                             oninput="filterSpellSearch(this.value)" 
+                             style="width:100%; padding:0.4rem 0.8rem; font-size:0.75rem; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-main); border-radius:6px; outline:none;" />
+                      <button class="secondary-btn" style="font-size:0.7rem; padding:0.4rem 0.6rem; white-space:nowrap;" onclick="clearSpellSearch()">✕ Clear</button>
+                    </div>
+                  </div>
+                  
+                  <button class="spell-search-nub" id="spellSearchNubBtn" onclick="toggleSpellSearchDrawer()" title="Toggle Spellbook Keyword Search">
+                    <span id="spellSearchNubIcon">🔍</span>
+                    <span id="spellSearchNubText">SEARCH SPELLS</span>
+                  </button>
+                </div>
+
+                <div id="spellListZone" style="display:flex; flex-direction:column; gap:0.5rem;">
+                  <p style="font-size:0.75rem; color:var(--text-muted); padding:1rem; text-align:center; border: 1px dashed var(--border-color); border-radius:4px;">
+                    No spells loaded. Import a caster to populate the Nomicon!
+                  </p>
+                </div>
+
+              </div>
+              
+              <!-- Right Index Level Tabs -->
+              <div class="spell-right-dock" id="spellLevelDock"></div>
+              
+            </div>
+
+          </div>
+        </div>
+
+        <div id="view-equipment" class="view-panel" role="tabpanel" aria-hidden="true">
+          <div class="card">
+            <div class="inventory-header-bar">
+              <div class="inv-header-left">
+                <div class="inv-mode-toggle-group">
+                  <button class="inv-mode-btn active" id="btn-inv-personal" onclick="setInventoryMode('personal')">👤 Personal</button>
+                  <button class="inv-mode-btn" id="btn-inv-party" onclick="setInventoryMode('party')">👥 Party Stash</button>
+                </div>
+                <span style="color:var(--text-muted);">|</span>
+                <span style="font-size:0.8rem; font-weight:bold;">Weight: <strong id="displayCarryWeight" style="color:var(--accent-color);">0 lbs</strong> / <span id="displayMaxWeight">0 lbs</span></span>
+              </div>
+              <div class="inv-header-right">
+                <div class="attunement-pill" title="Attunement Slots">
+                  <span>🔮 Attuned:</span><strong id="displayAttunement" style="color:var(--accent-color);">0 / 3</strong>
+                  <button id="gmAddAttunementBtn" style="font-size:0.6rem; padding:0.1rem 0.3rem; display:none;" onclick="gmModifyAttunement(1)">+</button>
+                </div>
+                <button style="font-size:0.7rem; padding:0.2rem 0.5rem;" onclick="promptAddItem()">+ Add Item</button>
+              </div>
+            </div>
+            <div class="action-filter-bar" id="containerFilterBar"></div>
+            <div id="inventoryListZone" style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.5rem;"></div>
+          </div>
+
+          <div class="sleek-bottom-currency-strip">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <strong style="font-size:0.8rem; color:var(--accent-color);">💰 Wallet:</strong>
+              <div class="coins-inline-inputs">
+                <div class="coin-pill-unit"><span>CP</span><input type="number" id="coin-cp" value="45" aria-label="Copper Pieces" /></div>
+                <div class="coin-pill-unit"><span>SP</span><input type="number" id="coin-sp" value="12" aria-label="Silver Pieces" /></div>
+                <div class="coin-pill-unit"><span>EP</span><input type="number" id="coin-ep" value="0" aria-label="Electrum Pieces" /></div>
+                <div class="coin-pill-unit"><span>GP</span><input type="number" id="coin-gp" value="135" aria-label="Gold Pieces" /></div>
+                <div class="coin-pill-unit"><span>PP</span><input type="number" id="coin-pp" value="2" aria-label="Platinum Pieces" /></div>
+              </div>
+              <button style="font-size:0.65rem; padding:0.15rem 0.4rem;" onclick="promptLootTransaction()">⚡ Quick Loot</button>
+              <button style="font-size:0.65rem; padding:0.15rem 0.4rem;" onclick="autoConsolidateCoins()" title="Convert low coins into higher denomination">⚖️ Make Change</button>
+              <button class="gems-drawer-toggle-btn" onclick="toggleGemsDrawer()">💎 Gems & Valuables (<span id="gemsCount">0</span>)</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:0.5rem;">
+              <span style="font-size:0.75rem; color:var(--text-muted);">Total Worth:</span>
+              <strong style="font-size:0.95rem; color:var(--accent-color);" id="displayTotalGold">0 GP</strong>
+            </div>
+            <div id="gemsDrawer" class="gems-drawer-content">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:0.75rem; color:var(--text-main);">Jewels & Art Stash</strong>
+                <button style="font-size:0.65rem; padding:0.15rem 0.35rem;" onclick="promptAddGem()">+ Add Valuable</button>
+              </div>
+              <div id="gemsListZone" style="display:flex; flex-direction:column; gap:0.3rem;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="view-features" class="view-panel" role="tabpanel" aria-hidden="true">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+              <h3>Class & Racial Traits</h3>
+              <button style="font-size:0.65rem; padding:0.15rem 0.35rem;" onclick="promptAddFeature()">+ Add Trait</button>
+            </div>
+            <div id="featuresListZone" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
+          </div>
+        </div>
+
+        <div id="view-journal" class="view-panel" role="tabpanel" aria-hidden="true">
+          <div class="card">
+            <h3>Campaign Quest Journal</h3>
+            <textarea style="width:100%; height:280px;" placeholder="Document session notes..."></textarea>
+          </div>
+        </div>
+
+        <div id="view-gm" class="view-panel" role="tabpanel" aria-hidden="true">
+  <div class="card">
+    <h3>GM Screen & Session Control</h3>
+
+    <!-- ISOLATED CLASS SPELL SLOTS TOGGLE -->
+<div style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <strong style="font-size:0.85rem; color:var(--text-main);">🔮 Isolated Class Spell Slots</strong>
+    <p style="font-size:0.7rem; color:var(--text-muted);">Separate spell slot pools per class instead of the RAW shared multiclass pool.</p>
+  </div>
+  <label style="display:flex; align-items:center; cursor:pointer;">
+    <input type="checkbox" id="gmIsolatedSlotsToggle" onchange="toggleIsolatedClassSlots(this.checked)" style="width:18px; height:18px; cursor:pointer;" />
+  </label>
+</div>
+    
+    <div style="display:flex; flex-direction:column; gap:0.6rem; background-color:var(--bg-secondary); padding:0.8rem; border-radius:6px; margin-bottom:1rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <strong>⚔️ Global Combat Mode:</strong>
+        <button id="gmCombatToggleBtn" onclick="toggleGMCombatMode()">Start Combat Mode</button>
+      </div>
+
+      <hr style="border:0; border-top:1px solid var(--border-color); margin: 0.4rem 0;" />
+
+      <!-- DOUBLE DICE ON CRIT TOGGLE -->
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong style="font-size:0.85rem; color:var(--text-main);">💥 Double Dice on Critical Hit</strong>
+          <p style="font-size:0.7rem; color:var(--text-muted);">Automatically doubles damage dice when a Natural 20 is rolled.</p>
+        </div>
+        <label style="display:flex; align-items:center; cursor:pointer;">
+          <input type="checkbox" id="gmDoubleCritToggle" onchange="toggleGMCritMode(this.checked)" style="width:18px; height:18px; cursor:pointer;" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- INITIATIVE & COMBAT TRACKER (Hidden by default, shown in Combat Mode) -->
+  <div class="card" id="gmCombatTrackerContainer" style="display:none; margin-top:0.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+      <h3 style="margin:0;">Initiative Tracker</h3>
+      <button class="secondary-btn" style="font-size:0.65rem; padding:0.2rem 0.5rem;" onclick="clearGMCombatants()">Clear All</button>
+    </div>
+    
+    <div style="display:flex; gap:0.4rem; margin-bottom:1rem; flex-wrap:wrap;">
+      <input type="text" id="gmInitName" placeholder="Name" style="flex:2; padding:0.3rem; font-size:0.75rem; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px;" />
+      <input type="number" id="gmInitRoll" placeholder="Init" style="flex:1; padding:0.3rem; font-size:0.75rem; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px;" />
+      <input type="number" id="gmInitHP" placeholder="HP" style="flex:1; padding:0.3rem; font-size:0.75rem; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px;" />
+      <select id="gmInitType" style="padding:0.3rem; font-size:0.75rem; background:var(--bg-secondary); border:1px solid var(--border-color); color:var(--text-main); border-radius:4px;">
+        <option value="Enemy">Enemy</option>
+        <option value="Player">Player</option>
+      </select>
+      <button style="font-size:0.75rem; padding:0.3rem 0.6rem;" onclick="addGMCombatant()">+ Add</button>
+    </div>
+
+    <!-- Target container for the tracker cards -->
+    <div id="gmCombatantList" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+  </div>
+</div>
+
+        <!-- MEMETIC DATA NOMICON -->
+        <div id="view-buckets" class="view-panel" role="tabpanel" aria-hidden="true">
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+              <h3>Memetic Data Nomicon</h3>
+              <span id="autosaveBadge" style="font-size:0.7rem; color:var(--accent-color); transition:opacity 0.3s ease; opacity:0.6;">🟢 Memory Active</span>
+            </div>
+            
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.8rem;">
+              Invoke, bind, and manifest JSON thought-scrolls safely without disrupting reality.
+            </p>
+
+            <div style="display:flex; flex-direction:row; gap:0.5rem; margin-bottom:1rem; background-color:var(--bg-secondary); padding:0.6rem; border-radius:6px; border:1px solid var(--border-color); align-items:center; justify-content:space-between; flex-wrap:wrap;">
+              <div>
+                <strong style="font-size:0.8rem; color:var(--text-main);">Smart Character & Data Importer:</strong>
+                <p style="font-size:0.7rem; color:var(--text-muted);">Import via D&D Beyond URL/JSON, local PDF, or manual entry.</p>
+              </div>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                <button style="font-size:0.75rem; padding:0.3rem 0.6rem;" onclick="promptDnDBeyondURLImport()">✨ Import D&D Beyond Link</button>
+                <button class="secondary-btn" style="font-size:0.75rem; padding:0.3rem 0.6rem;" onclick="enableManualEntry()">📝 Manual Entry</button>
+                <button class="secondary-btn" style="font-size:0.75rem; padding:0.3rem 0.6rem;" onclick="document.getElementById('pdfFileInput').click()">📄 Import PDF</button>
+              </div>
+            </div>
+
+            <!-- PROTECTED STATIC NOMICON CARDS -->
+            <div id="nomiconStaticCards" style="display:flex; flex-direction:column; gap:0.5rem;">
+              
+              <div class="card" style="margin:0; background:var(--bg-secondary); padding:0.8rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <strong style="color:var(--text-main);">Character State Scroll</strong>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Stats, active buffs, health state, and equipped gear.</p>
+                  </div>
+                  <button class="secondary-btn" style="font-size:0.75rem; padding:0.4rem 0.8rem;" onclick="loadBucket('character')">⚡ Invoke Scroll</button>
+                </div>
+              </div>
+
+              <div class="card" style="margin:0; background:var(--bg-secondary); padding:0.8rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <strong style="color:var(--text-main);">Homebrew Mechanics Library</strong>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Custom rules, injected mechanics, and extracted classes.</p>
+                  </div>
+                  <button class="secondary-btn" style="font-size:0.75rem; padding:0.4rem 0.8rem;" onclick="loadBucket('homebrew')">⚡ Invoke Scroll</button>
+                </div>
+              </div>
+
+              <div class="card" style="margin:0; background:var(--bg-secondary); padding:0.8rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <strong style="color:var(--text-main);">Campaign Lore & World Tome</strong>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem;">Locations, deities, factions, and world state notes.</p>
+                  </div>
+                  <button class="secondary-btn" style="font-size:0.75rem; padding:0.4rem 0.8rem;" onclick="loadBucket('campaign')">⚡ Invoke Scroll</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- TARGET CONTAINER FOR DYNAMIC BUCKETS -->
+            <div id="bucketsListZone"></div>
+
+          </div>
+        </div>
+
+      </main>
+
+      <!-- RIGHT ISLAND CONTAINER -->
+      <div class="right-island-container">
+        
+        <!-- 1. REST & RECHARGE CARD -->
+        <div class="card rest-card-wrapper" style="margin-bottom: 0.8rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:0.85rem; color:var(--text-main);">Rest & Recharge</h3>
+            <button class="rest-nubbin-btn" style="font-size:0.6rem; padding:0.15rem 0.4rem;" title="Recharge all Specific/GM items" onclick="triggerSpecificRecharge()">↻ Specific</button>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.4rem; margin-top:0.4rem;">
+            <button class="rest-nubbin-btn" style="font-size:0.75rem; padding:0.3rem;" onclick="triggerRest('short_rest', event)">☕ Short Rest</button>
+            <button class="rest-nubbin-btn" style="font-size:0.75rem; padding:0.3rem;" onclick="triggerRest('long_rest', event)">⛺ Long Rest</button>
+          </div>
+          
+          <div style="display:flex; gap:0.4rem; margin-top:0.4rem; align-items:center;">
+            <select id="timeRechargeSelect" aria-label="Select Time Trigger" style="flex:1; font-size:0.75rem; padding:0.3rem; border:1px solid var(--border-color); background:var(--bg-secondary); color:var(--text-main); border-radius:4px;">
+              <option value="dawn">🌅 Dawn</option>
+              <option value="noon">☀️ Noon</option>
+              <option value="dusk">🌇 Dusk</option>
+              <option value="midnight">🌙 Midnight</option>
+            </select>
+            <button class="rest-nubbin-btn" style="font-size:0.75rem; padding:0.3rem 0.5rem;" onclick="triggerTimeRecharge(document.getElementById('timeRechargeSelect').value)">Tick Time</button>
+          </div>
+        </div>
+
+        <!-- 2. SKILLS CARD -->
+        <div class="card skills-card-wrapper">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+            <h3 style="margin:0; font-size:0.85rem;">Skills <span id="skillCountBadge" style="color:var(--text-muted); font-size:0.75rem;">(18)</span></h3>
+            <button class="secondary-btn" style="font-size:0.65rem; padding:0.2rem 0.4rem;" onclick="promptAddSkill()">+ Custom</button>
+          </div>
+
+          <div style="display:flex; gap:0.3rem; margin-bottom:0.6rem;">
+            <button class="sort-btn active" id="sortBtnAlpha" onclick="setSkillSort('alpha')">A–Z</button>
+            <button class="sort-btn" id="sortBtnMod" onclick="setSkillSort('mod')">Mod ⬇</button>
+            <button class="sort-btn" id="sortBtnProf" onclick="setSkillSort('prof')">Prof</button>
+          </div>
+
+          <div id="skillsListContainer" class="skills-scroll-area">
+            <!-- Dynamic Skills Render Here -->
+          </div>
+
+          <!-- DICE LOG DISPLAY AREA -->
+          <div id="diceLog" style="text-align:center; margin-top:0.6rem; font-size:0.75rem; color:var(--text-main); font-weight:bold; min-height:22px;">
+            <span style="font-size:0.65rem; color:var(--text-muted); font-style:italic;">Click any skill, attack, or dice to roll!</span>
+          </div>
+        </div>
+
+      </div> <!-- END RIGHT ISLAND CONTAINER -->
+
+    </div> <!-- END WORKSPACE GRID -->
+
+    <!-- FOOTER -->
+    <footer role="contentinfo">
+      <div class="footer-stats-group">
+        <div><strong style="color: var(--accent-color);">Armor:</strong> Light, Medium, Shields</div>
+        <div><strong style="color: var(--accent-color);">Weapons:</strong> Simple, Martial</div>
+        <div><strong style="color: var(--accent-color);">Tools & Langs:</strong> Common, Orc</div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:0.8rem;">
+        
+        <!-- OMINOUS GM MODE CONTROL -->
+        <div id="gmToggleWrapper" class="gm-toggle-container">
+          <label class="gm-toggle-label" title="GM Mode Toggle">
+            <input type="checkbox" id="gmRoleToggle" class="gm-checkbox" onchange="toggleGMRole(this.checked)" /> 
+            <span>👁️ GM Mode</span>
+          </label>
+        </div>
+
+        <!-- FOOTER ANCHORED DICE ROLLER -->
+        <div style="position:relative;">
+          <button class="footer-dice-nubbin" onclick="toggleDiceTray()" aria-label="Toggle Quick Dice Tray Roller">
+            🎲 Dice Roller ▲
+          </button>
+
+<!-- SLIDE-UP TRAY DRAWER -->
+<div id="diceTrayDrawer" class="dice-tray-drawer" style="display:none;" role="dialog" aria-label="Quick Dice Tray">
+  
+  <!-- ROLL MODE TOGGLE STRIP (ADV / NORM / DIS) -->
+  <div style="display:flex; gap:0.25rem; margin-bottom:0.4rem; background:rgba(0,0,0,0.3); padding:2px; border-radius:4px;">
+    <button id="roll-mode-adv" class="sort-btn" style="flex:1; font-size:0.65rem; padding:0.2rem;" onclick="setRollMode('advantage')">⚡ ADV</button>
+    <button id="roll-mode-norm" class="sort-btn active" style="flex:1; font-size:0.65rem; padding:0.2rem;" onclick="setRollMode('normal')">NORM</button>
+    <button id="roll-mode-dis" class="sort-btn" style="flex:1; font-size:0.65rem; padding:0.2rem;" onclick="setRollMode('disadvantage')">💀 DIS</button>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+    <strong style="font-size:0.75rem; color:var(--accent-color);">🎲 Quick Dice Tray</strong>
+    <div style="display:flex; align-items:center; gap:0.3rem;">
+      <label style="font-size:0.65rem; color:var(--text-muted);">Qty:</label>
+      <input type="number" id="diceQtyInput" value="1" min="1" max="20" style="width:36px; font-size:0.7rem; padding:0.1rem; text-align:center;" />
+      <label style="font-size:0.65rem; color:var(--text-muted);">Mod:</label>
+      <input type="number" id="diceModInput" value="0" style="width:36px; font-size:0.7rem; padding:0.1rem; text-align:center;" />
+    </div>
+  </div>
+
+  <div class="dice-grid">
+    <button class="dice-btn" onclick="rollCustomDice(4)">d4</button>
+    <button class="dice-btn" onclick="rollCustomDice(6)">d6</button>
+    <button class="dice-btn" onclick="rollCustomDice(8)">d8</button>
+    <button class="dice-btn" onclick="rollCustomDice(10)">d10</button>
+    <button class="dice-btn" onclick="rollCustomDice(12)">d12</button>
+    <button class="dice-btn" onclick="rollCustomDice(20)">d20</button>
+    <button class="dice-btn" onclick="rollCustomDice(100)">d100</button>
+  </div>
+</div>
+    </footer>
+
+  </div> <!-- END APP FRAME -->
+
+  <!-- CUSTOM DYNAMIC THEMED MODAL OVERLAY -->
+  <div id="customModalOverlay" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Memetic Core</h3>
+        <button style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem;" aria-label="Close Modal Dialog" onclick="closeModal(false)">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <!-- ARIA Live Region for Screen Readers -->
+  <div id="srAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ENTRY POINT MODULE -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

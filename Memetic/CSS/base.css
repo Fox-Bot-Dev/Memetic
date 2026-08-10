@@ -1,0 +1,78 @@
+/* ==========================================================================
+   2. GLOBAL RESET & NATIVE ELEMENTS
+   ========================================================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+
+body {
+  background-color: var(--bg-viewport);
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  color: var(--text-main); font-family: var(--font-family);
+  height: 100vh; width: 100vw; padding: 24px;
+  display: flex; overflow: hidden;
+}
+
+/* Native Element Dark Overrides */
+input, select, textarea, option {
+  background-color: var(--bg-primary) !important; color: var(--text-main) !important;
+  border: 1px solid var(--border-color); padding: 0.35rem 0.5rem;
+  font-family: inherit; border-radius: 4px; color-scheme: dark;
+}
+
+button {
+  background-color: var(--accent-color); color: var(--btn-text-color) !important;
+  font-weight: bold; cursor: pointer; border: none;
+  padding: 0.35rem 0.65rem; border-radius: 4px;
+}
+button:hover { background-color: var(--accent-hover); }
+
+button.secondary-btn { background-color: var(--bg-panel); color: var(--text-main) !important; border: 1px solid var(--border-color); }
+button.secondary-btn:hover { border-color: var(--accent-color); color: var(--accent-color) !important; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+/* Hide Autofill Icons Across All Inputs */
+[data-dashlane-disabled="true"] ::-webkit-credentials-auto-fill-button,
+[data-dashlane-disabled="true"] ::-webkit-contacts-auto-fill-button,
+dashlane-inline-icon, div[data-dashlane-rid], input::-aria-autocomplete {
+  display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important;
+}
+/* ==========================================
+   ACCESSIBILITY SUITE OVERRIDES
+   ========================================== */
+
+/* Font Family Overrides */
+html[data-font="hyperlegible"] {
+  font-family: 'Atkinson Hyperlegible', Arial, sans-serif !important;
+  letter-spacing: 0.02em;
+}
+
+html[data-font="mono"] {
+  font-family: 'Courier New', Consolas, monospace !important;
+  font-weight: 600;
+}
+
+/* Reduced Motion Mode */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* High-Visibility Focus Outline for Keyboard Nav & Visibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.tab-nubbin:focus-visible {
+  outline: 3px solid var(--accent-color, #70a1ff) !important;
+  outline-offset: 2px !important;
+}
