@@ -1,0 +1,83 @@
+/* ==========================================================================
+   1. CORE VARIABLES, THEMES & OVERDRIVES
+   ========================================================================== */
+:root {
+  --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  --frame-opacity: 0.92;
+}
+
+/* Base Night Shields */
+:root[data-theme="astigmatism-amber"] { --bg-viewport: #0a0b0d; --bg-primary: rgba(18, 19, 22, var(--frame-opacity)); --bg-secondary: #16181f; --bg-panel: #1f222a; --border-color: #3b3226; --text-main: #b8b2a7; --text-muted: #7c776e; --accent-color: #d48806; --accent-pale: #e0a94d; --accent-hover: #b57400; --btn-text-color: #120e03; --debuff-color: #ab3e35; --necrotic-color: #8e44ad; --temphp-color: #00bcd4; }
+:root[data-theme="high-fantasy-dark"] { --bg-viewport: #05070a; --bg-primary: rgba(13, 17, 23, var(--frame-opacity)); --bg-secondary: #161b22; --bg-panel: #21262d; --border-color: #30363d; --text-main: #c9d1d9; --text-muted: #8b949e; --accent-color: #4a8cd8; --accent-pale: #84aee6; --accent-hover: #3b73b5; --btn-text-color: #ffffff; --debuff-color: #d9534f; --necrotic-color: #8e44ad; --temphp-color: #00bcd4; }
+:root[data-theme="parchment-light"] { --bg-viewport: #e2d5bd; --bg-primary: rgba(244, 235, 217, var(--frame-opacity)); --bg-secondary: #e8dcc4; --bg-panel: #ddd0b3; --border-color: #b8a686; --text-main: #2b251f; --text-muted: #5e5243; --accent-color: #8c2d19; --accent-pale: #b86452; --accent-hover: #6b2010; --btn-text-color: #ffffff; --debuff-color: #b71c1c; --necrotic-color: #8e44ad; --temphp-color: #00bcd4; }
+
+/* Accessibility Modes */
+:root[data-theme="cb-deuteranopia"] { --bg-viewport: #070d14; --bg-primary: rgba(12, 21, 32, var(--frame-opacity)); --bg-secondary: #17263c; --bg-panel: #20334f; --border-color: #3f5d86; --text-main: #f0f4f8; --text-muted: #9bb1cb; --accent-color: #ffc20a; --accent-hover: #d49f00; --btn-text-color: #070d14; --debuff-color: #006cd6; --necrotic-color: #9945ff; --temphp-color: #00e5ff; }
+:root[data-theme="cb-monochrome"] { --bg-viewport: #0a0a0a; --bg-primary: rgba(20, 20, 20, var(--frame-opacity)); --bg-secondary: #242424; --bg-panel: #2e2e2e; --border-color: #555555; --text-main: #ffffff; --text-muted: #aaaaaa; --accent-color: #ffffff; --accent-hover: #cccccc; --btn-text-color: #000000; --debuff-color: #888888; --necrotic-color: #aaaaaa; --temphp-color: #ffffff; }
+
+/* Dynamic Core Class Palettes */
+:root[data-theme="barbarian"] { --bg-viewport: #0c0507; --bg-primary: rgba(20, 10, 14, var(--frame-opacity)); --bg-secondary: #1a0c10; --bg-panel: #261118; --border-color: #4a1c24; --text-main: #f5e6e8; --text-muted: #a37d84; --accent-color: #e74c3c; --accent-hover: #c0392b; --btn-text-color: #ffffff; }
+:root[data-theme="bard"] { --bg-viewport: #0c0814; --bg-primary: rgba(18, 12, 28, var(--frame-opacity)); --bg-secondary: #180e26; --bg-panel: #231438; --border-color: #442266; --text-main: #f3e6ff; --text-muted: #a282c4; --accent-color: #9b59b6; --accent-hover: #8e44ad; --btn-text-color: #ffffff; }
+:root[data-theme="cleric"] { --bg-viewport: #121008; --bg-primary: rgba(26, 23, 12, var(--frame-opacity)); --bg-secondary: #211c0e; --bg-panel: #2e2814; --border-color: #574a1f; --text-main: #fffde6; --text-muted: #b8ae85; --accent-color: #f1c40f; --accent-hover: #f39c12; --btn-text-color: #120e03; }
+:root[data-theme="druid"] { --bg-viewport: #06120a; --bg-primary: rgba(10, 26, 15, var(--frame-opacity)); --bg-secondary: #0e2113; --bg-panel: #14301c; --border-color: #215430; --text-main: #e6ffec; --text-muted: #82b892; --accent-color: #27ae60; --accent-hover: #219653; --btn-text-color: #ffffff; }
+:root[data-theme="fighter"] { --bg-viewport: #090e14; --bg-primary: rgba(15, 22, 31, var(--frame-opacity)); --bg-secondary: #121b26; --bg-panel: #1b2738; --border-color: #2e435e; --text-main: #e8f1ff; --text-muted: #839bb8; --accent-color: #7f8c8d; --accent-hover: #95a5a6; --btn-text-color: #ffffff; }
+:root[data-theme="monk"] { --bg-viewport: #120a05; --bg-primary: rgba(26, 15, 8, var(--frame-opacity)); --bg-secondary: #21120a; --bg-panel: #301a0e; --border-color: #5e331a; --text-main: #ffede3; --text-muted: #b8917d; --accent-color: #e67e22; --accent-hover: #d35400; --btn-text-color: #ffffff; }
+:root[data-theme="paladin"] { --bg-viewport: #121006; --bg-primary: rgba(26, 23, 10, var(--frame-opacity)); --bg-secondary: #211d0a; --bg-panel: #302b0e; --border-color: #5c521a; --text-main: #ffffea; --text-muted: #b8b27d; --accent-color: #f39c12; --accent-hover: #e67e22; --btn-text-color: #120e03; }
+:root[data-theme="ranger"] { --bg-viewport: #051012; --bg-primary: rgba(8, 24, 26, var(--frame-opacity)); --bg-secondary: #0a2124; --bg-panel: #0e3033; --border-color: #1a5257; --text-main: #e3faff; --text-muted: #7db4b8; --accent-color: #16a085; --accent-hover: #1abc9c; --btn-text-color: #ffffff; }
+:root[data-theme="rogue"] { --bg-viewport: #08090f; --bg-primary: rgba(14, 16, 26, var(--frame-opacity)); --bg-secondary: #121421; --bg-panel: #1b1e30; --border-color: #313657; --text-main: #e8ebff; --text-muted: #838ab8; --accent-color: #34495e; --accent-hover: #2c3e50; --btn-text-color: #ffffff; }
+:root[data-theme="sorcerer"] { --bg-viewport: #12060e; --bg-primary: rgba(26, 10, 20, var(--frame-opacity)); --bg-secondary: #210a19; --bg-panel: #300e24; --border-color: #571a41; --text-main: #ffe6f5; --text-muted: #b87db4; --accent-color: #e84393; --accent-hover: #d63031; --btn-text-color: #ffffff; }
+:root[data-theme="warlock"] { --bg-viewport: #0d0612; --bg-primary: rgba(20, 10, 28, var(--frame-opacity)); --bg-secondary: #190c24; --bg-panel: #251136; --border-color: #421e5e; --text-main: #f5e6ff; --text-muted: #a77db8; --accent-color: #6c5ce7; --accent-hover: #a29bfe; --btn-text-color: #ffffff; }
+:root[data-theme="wizard"] { --bg-viewport: #050d12; --bg-primary: rgba(8, 20, 28, var(--frame-opacity)); --bg-secondary: #0a1924; --bg-panel: #0e2536; --border-color: #1a425e; --text-main: #e3f3ff; --text-muted: #7da8cc; --accent-color: #0984e3; --accent-hover: #74b9ff; --btn-text-color: #ffffff; }
+
+/* MEMETIC CODEX OVERDRIVE STATE (.oramer-k-canrac) */
+body.oramer-k-canrac {
+  --bg-primary: #0a0a0c; --bg-secondary: #141115; --text-main: #f0f0f5; --text-muted: #a0a0b0;
+  --resonance-alpha: #ff1e27; --resonance-alpha-glow: rgba(255, 30, 39, 0.4);
+  --resonance-beta: #00ff66; --resonance-beta-glow: rgba(0, 255, 102, 0.5);
+  --accent-color: #ff1e27; --border-color: #ff1e27;
+  background-color: var(--bg-primary); color: var(--text-main);
+  font-family: 'Consolas', 'Fira Code', 'Cascadia Code', 'Liberation Mono', monospace !important;
+}
+
+body.oramer-k-canrac::after {
+  content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  pointer-events: none; z-index: 9999;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) 1px, transparent 1px, transparent 2px);
+}
+
+body.oramer-k-canrac .card, body.oramer-k-canrac .panel-card, body.oramer-k-canrac .combat-header-badge {
+  border: 1px solid var(--resonance-alpha) !important;
+  box-shadow: 0 0 6px var(--resonance-alpha-glow), inset 0 0 3px var(--resonance-alpha-glow);
+}
+
+body.oramer-k-canrac button, body.oramer-k-canrac .secondary-btn, body.oramer-k-canrac .sort-btn, body.oramer-k-canrac .action-filter-btn {
+  background-color: #1a0507 !important; color: var(--resonance-alpha) !important;
+  border: 1px solid var(--resonance-alpha) !important; box-shadow: 0 0 5px var(--resonance-alpha-glow);
+  text-shadow: none; transition: all 0.15s ease-in-out;
+}
+
+body.oramer-k-canrac button:hover, body.oramer-k-canrac .secondary-btn:hover {
+  background-color: var(--resonance-alpha) !important; color: #000000 !important; box-shadow: 0 0 10px var(--resonance-alpha);
+}
+
+body.oramer-k-canrac .sort-btn.active, body.oramer-k-canrac .action-filter-btn.active, body.oramer-k-canrac .tab-nubbin.active {
+  background-color: #051a0d !important; color: var(--resonance-beta) !important;
+  border: 1px solid var(--resonance-beta) !important; box-shadow: 0 0 8px var(--resonance-beta-glow) !important;
+}
+
+body.oramer-k-canrac .buff-tag, body.oramer-k-canrac [style*="background:var(--accent-color)"], body.oramer-k-canrac [style*="background: var(--accent-color)"] {
+  background-color: var(--resonance-beta) !important; box-shadow: 0 0 8px var(--resonance-beta-glow);
+}
+
+body.oramer-k-canrac .prof-dot.active, body.oramer-k-canrac .skill-prof-icon.active {
+  color: var(--resonance-beta) !important; text-shadow: 0 0 6px var(--resonance-beta);
+}
+
+@keyframes theme-corrupt {
+  0% { filter: invert(0) contrast(1); transform: skew(0deg); }
+  20% { filter: invert(0.8) contrast(2); transform: skew(3deg); }
+  40% { filter: invert(0) hue-rotate(90deg); transform: skew(-3deg); }
+  60% { filter: contrast(3) brightness(1.5); transform: scaleY(0.98); }
+  100% { filter: invert(0) contrast(1); transform: skew(0deg); }
+}
+.glitch-transition { animation: theme-corrupt 0.35s ease-in-out; }
